@@ -49,6 +49,16 @@ exporters:
 
 processors:
   batch:
+  transform/add_resource_attributes_as_metric_attributes:
+    # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor
+    error_mode: ignore
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(datapoint.attributes["service.name"], resource.attributes["service.name"])
+          - set(datapoint.attributes["service.namespace"], resource.attributes["service.namespace"])
+          - set(datapoint.attributes["deployment.environment"], resource.attributes["deployment.environment"])
+          - set(datapoint.attributes["service.version"], resource.attributes["service.version"])
 
 extensions:
   health_check:
@@ -71,7 +81,11 @@ service:
       # exporters: [zipkin, otlp/jaeger, otlp/tempo, debug]
     metrics:
       receivers: [otlp]
-      processors: [batch]
+      processors: 
+        [
+          batch,
+          transform/add_resource_attributes_as_metric_attributes,
+        ]
       exporters: [prometheus]
       # exporters: [prometheusremotewrite, prometheus, debug]
     logs:
